@@ -188,7 +188,9 @@ class LFUCache(Cache):
             data = super().lookup(key)
             if len(self.cache) >= self.size:
                 # Evict least frequently used item
-                lfu_key, _=next(iter(self.freq_to_keys[self.min_freq].items()))
+                lfu_key, _ = next(
+                    iter(self.freq_to_keys[self.min_freq].items())
+                )
                 del self.cache[lfu_key]
                 del self.freqs[lfu_key]
                 self.freq_to_keys[self.min_freq].popitem(last=False)
@@ -203,3 +205,4 @@ class LFUCache(Cache):
                 self.min_freq = 1
             self.cache_hit_flag = False
             return data
+        
