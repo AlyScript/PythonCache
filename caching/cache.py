@@ -166,14 +166,13 @@ class LFUCache(Cache):
         new_freq = self.freqs[key]
 
         # Remove the key from its current frequency list
-        self.freq_to_keys[freq].pop(key)
+        self.freq_to_keys[freq].pop(key, None)
         if not self.freq_to_keys[freq]:
             del self.freq_to_keys[freq]
             if freq == self.min_freq:
-                # Find the next higher frequency that exists or adjust min_freq appropriately
                 self.min_freq = min(self.freq_to_keys.keys(), default=self.min_freq + 1)
 
-        # Add the key to the end of the new frequency list, updating the recency of access
+        # Add the key to the new frequency list, updating access recency
         self.freq_to_keys[new_freq][key] = None
 
     def lookup(self, key):
@@ -185,7 +184,7 @@ class LFUCache(Cache):
         else:
             data = super().lookup(key)
             if len(self.cache) >= self.size:
-                # Evict from the front of the lowest frequency list
+                # Evict from the lowest frequency list's front
                 lfu_key, _ = next(iter(self.freq_to_keys[self.min_freq].items()))
                 del self.cache[lfu_key]
                 del self.freqs[lfu_key]
