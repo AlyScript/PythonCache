@@ -205,4 +205,3 @@ class LFUCache(Cache):
                 self.min_freq = 1
             self.cache_hit_flag = False
             return data
-        
