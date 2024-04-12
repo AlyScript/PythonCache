@@ -171,7 +171,9 @@ class LFUCache(Cache):
             del self.freq_to_keys[freq]
             if freq == self.min_freq:
                 # Adjust min_freq to next available frequency
-                self.min_freq = min(self.freq_to_keys.keys(), default=self.min_freq + 1)
+                self.min_freq = min(
+                    self.freq_to_keys.keys(), default=self.min_freq + 1
+                    )
 
         # Add key to new frequency list
         self.freq_to_keys[new_freq][key] = None
@@ -186,7 +188,7 @@ class LFUCache(Cache):
             data = super().lookup(key)
             if len(self.cache) >= self.size:
                 # Evict least frequently used item
-                lfu_key, _ = next(iter(self.freq_to_keys[self.min_freq].items()))
+                lfu_key, _=next(iter(self.freq_to_keys[self.min_freq].items()))
                 del self.cache[lfu_key]
                 del self.freqs[lfu_key]
                 self.freq_to_keys[self.min_freq].popitem(last=False)
@@ -201,4 +203,3 @@ class LFUCache(Cache):
                 self.min_freq = 1
             self.cache_hit_flag = False
             return data
-
