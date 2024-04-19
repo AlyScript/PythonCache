@@ -147,8 +147,11 @@ class MRUCache(Cache):
             self.cache_hit_flag = False
             return data
 
-# My LFU cache is now an array of tuples (address, data), i.e. cache = [(address1, data1), (address2, data2), (None), (None), (None)]
+# My LFU cache is now an array of tuples (address, data)
+# i.e. cache = [(address1, data1), (address2, data2), (None), (None), (None)]
 #                              cache[item] = (item, data1)
+
+
 class LFUCache(Cache):
     def name(self):
         return "LFU"
@@ -170,7 +173,7 @@ class LFUCache(Cache):
         
         data = super().lookup(address)
         # If there is space in the cache, add the new item
-        # This ensures items are alwaus added to the cache in the correct order
+        # Ensures items are alwaus added to the cache in the correct order
         # Which is important for the case of a tie in frequency as we remove LRU item
         if None in self.cache:
             self.cache.remove(None)
@@ -184,4 +187,3 @@ class LFUCache(Cache):
             self.cache.append((address, data))
             self.freq_dict[address] = self.freq_dict.get(address, 0) + 1
         return data
-        
