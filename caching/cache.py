@@ -170,11 +170,11 @@ class LFUCache(Cache):
                 self.cache_hit_flag = True
                 self.freq_dict[address] = self.freq_dict.get(address, 0) + 1
                 return item[1]
-        
+
         data = super().lookup(address)
         # If there is space in the cache, add the new item
         # Ensures items are alwaus added to the cache in the correct order
-        # Which is important for the case of a tie in frequency as we remove LRU item
+        # So that in case of a tie in frequency as we remove LRU item
         if None in self.cache:
             self.cache.remove(None)
             self.cache.append((address, data))
