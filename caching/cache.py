@@ -147,61 +147,41 @@ class MRUCache(Cache):
             self.cache_hit_flag = False
             return data
 
-
+# My LFU cache is now an array of tuples (address, data), i.e. cache = [(address1, data1), (address2, data2), (None), (None), (None)]
+#                              cache[item] = (item, data1)
 class LFUCache(Cache):
     def name(self):
         return "LFU"
 
     def __init__(self, data, size=5):
-        super().__init__(data, size)
+        super().__init__(data)
         self.size = size
-        self.cache = {}
-        self.freqs = defaultdict(int)
-        self.freq_to_keys = defaultdict(OrderedDict)
-        self.min_freq = 0
+        self.cache = [None] * size
+        self.freq_dict = {}
 
-    def _update_freq(self, key):
-        freq = self.freqs[key]
-        self.freqs[key] += 1
-        new_freq = self.freqs[key]
-
-        # Safely remove key from current freq list
-        self.freq_to_keys[freq].pop(key, None)
-        if not self.freq_to_keys[freq]:
-            del self.freq_to_keys[freq]
-            if freq == self.min_freq:
-                # Adjust min_freq to next available frequency
-                self.min_freq = min(
-                    self.freq_to_keys.keys(), default=self.min_freq + 1
-                    )
-
-        # Add key to new frequency list
-        self.freq_to_keys[new_freq][key] = None
-
-    def lookup(self, key):
-        if key in self.cache:
-            self._update_freq(key)
-            self.cache_hit_count += 1
-            self.cache_hit_flag = True
-            return self.cache[key]
+    def lookup(self, address):
+        # If address in Cache, increment frequency and return data
+        for item in self.cache:
+            if item is not None and item[0] == address:
+                self.cache_hit_count += 1
+                self.cache_hit_flag = True
+                self.freq_dict[address] = self.freq_dict.get(address, 0) + 1
+                return item[1]
+        
+        data = super().lookup(address)
+        # If there is space in the cache, add the new item
+        # This ensures items are alwaus added to the cache in the correct order
+        # Which is important for the case of a tie in frequency as we remove LRU item
+        if None in self.cache:
+            self.cache.remove(None)
+            self.cache.append((address, data))
+            self.freq_dict[address] = self.freq_dict.get(address, 0) + 1
         else:
-            data = super().lookup(key)
-            if len(self.cache) >= self.size:
-                # Evict least frequently used item
-                lfu_key, _ = next(
-                    iter(self.freq_to_keys[self.min_freq].items())
-                )
-                del self.cache[lfu_key]
-                del self.freqs[lfu_key]
-                self.freq_to_keys[self.min_freq].popitem(last=False)
-                if not self.freq_to_keys[self.min_freq]:
-                    self.min_freq = min(self.freq_to_keys.keys(), default=0)
-
-            # Add new key to cache
-            self.cache[key] = data
-            self.freqs[key] = 1
-            self.freq_to_keys[1][key] = None
-            if self.min_freq == 0 or self.min_freq > 1:
-                self.min_freq = 1
-            self.cache_hit_flag = False
-            return data
+            # Find the LFU item
+            lfu_item = min(self.cache, key=lambda x: self.freq_dict[x[0]])
+            self.cache.remove(lfu_item)
+            del self.freq_dict[lfu_item[0]]
+            self.cache.append((address, data))
+            self.freq_dict[address] = self.freq_dict.get(address, 0) + 1
+        return data
+        
